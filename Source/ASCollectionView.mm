@@ -837,6 +837,7 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
   
   if (_batchUpdateCount == 0) {
     _ASHierarchyChangeSet *changeSet = _changeSet;
+
     // Nil out _changeSet before forwarding to _dataController to allow the change set to cause subsequent batch updates on the same run loop
     _changeSet = nil;
     changeSet.animated = animated;
@@ -847,9 +848,16 @@ static NSString * const kReuseIdentifier = @"_ASCollectionReuseIdentifier";
 - (void)performBatchAnimated:(BOOL)animated updates:(void (^)())updates completion:(void (^)(BOOL))completion
 {
   ASDisplayNodeAssertMainThread();
+  BOOL isRootPerform = (_batchUpdateCount == 0);
+  auto rootActivity = isRootPerform ? os_activity_create("collectionUpdate", OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT) : OS_ACTIVITY_NONE;
+  os_activity_scope(rootActivity);
   [self beginUpdates];
-  if (updates) {
-    updates();
+  {
+    auto submitActivity = isRootPerform ? os_activity_create("collectionUpdateSubmit", OS_ACTIVITY_CURRENT, OS_ACTIVITY_FLAG_DEFAULT) : OS_ACTIVITY_NONE;
+    os_activity_scope(submitActivity);
+    if (updates) {
+      updates();
+    }
   }
   [self endUpdatesAnimated:animated completion:completion];
 }

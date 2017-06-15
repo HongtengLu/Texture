@@ -46,6 +46,7 @@
 #import <AsyncDisplayKit/ASWeakProxy.h>
 #import <AsyncDisplayKit/ASResponderChainEnumerator.h>
 #import <AsyncDisplayKit/ASTipsController.h>
+#import <os/activity.h>
 
 #if ASDisplayNodeLoggingEnabled
   #define LOG(...) NSLog(__VA_ARGS__)
@@ -244,6 +245,11 @@ static ASDisplayNodeMethodOverrides GetASDisplayNodeMethodOverrides(Class c)
 {
   // Ensure this value is cached on the main thread before needed in the background.
   ASScreenScale();
+  // Configure these
+  const char *subsystem = "com.facebook.AsyncDisplayKit";
+  ASLayoutLog = os_log_create(subsystem, "Layout");
+//  ASCollectionLog = os_log_create(subsystem, "Collections");
+  ASRenderLog = os_log_create(subsystem, "Render");
 }
 
 + (Class)viewClass
